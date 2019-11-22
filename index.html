@@ -30,9 +30,10 @@
       return st.trim().split('\n').map(row => [...row.trim()])
     }
 
-    const simpleLevel = new Level(toArray(simpleLevelPlan));
-    console.log(simpleLevel);
-    const display = new DOMDisplay(document.body ,simpleLevel)
+    // const simpleLevel = new Level(toArray(simpleLevelPlan));
+    // console.log(simpleLevel);
+    // const display = new DOMDisplay(document.body ,simpleLevel)
+    runGame([toArray(simpleLevelPlan)], DOMDisplay)
   </script>
 </body>
 

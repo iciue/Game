@@ -38,10 +38,11 @@ class DOMDisplay {
  * @returns
  */
 DOMDisplay.prototype.syncState = function(state) {
-  if (this.actorsLayer) return this.actorsLayer.remove()
+  if (this.actorsLayer) this.actorsLayer.remove()
   this.actorsLayer = drawActors(state.actors)
   this.dom.appendChild(this.actorsLayer)
   this.dom.className = `game ${state.status}`
+  window.dom = this.actorsLayer
   this.scrollPlayerIntoView(state)
 }
 
@@ -56,7 +57,7 @@ DOMDisplay.prototype.scrollPlayerIntoView = function(state) {
   const bottom = top + height
 
   const player = state.player
-  const center = player.pos.plus(player.size.time(0.5)).times(scale) // 玩家中心的坐标
+  const center = player.pos.plus(player.size.times(0.5)).times(scale) // 玩家中心的坐标
 
   if (center.x < left + margin) {
     this.dom.scrollLeft = center.x - margin
