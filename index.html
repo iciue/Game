@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>跳跳哭</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <script src="level.js"></script>
+  <script src="display.js"></script>
+
+  <script>
+    let simpleLevelPlan = `
+    ......................
+    ..#................#..
+    ..#..............=.#..
+    ..#.........o.o....#..
+    ..#.@......#####...#..
+    ..#####............#..
+    ......#++++++++++++#..
+    ......##############..
+    ......................`
+    
+    const toArray = (st) => {
+      return st.trim().split('\n').map(row => [...row.trim()])
+    }
+
+    const simpleLevel = new Level(toArray(simpleLevelPlan));
+    console.log(simpleLevel);
+    const display = new DOMDisplay(document.body ,simpleLevel)
+  </script>
+</body>
+
+</html>
