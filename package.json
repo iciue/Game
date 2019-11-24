@@ -1,0 +1,19 @@
+{
+  "name": "GAME",
+  "version": "1.0.0",
+  "description": "平台跳跃小游戏",
+  "private": true,
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iciue/Game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iciue/Game/issues"
+  },
+  "homepage": "https://github.com/iciue/Game#readme",
+  "devDependencies": {}
+}

@@ -11,30 +11,7 @@
 
 <body>
 
-  <script src="level.js"></script>
-  <script src="display.js"></script>
-
-  <script>
-    let simpleLevelPlan = `
-    ......................
-    ..#................#..
-    ..#..............=.#..
-    ..#.........o.o....#..
-    ..#.@......#####...#..
-    ..#####............#..
-    ......#++++++++++++#..
-    ......##############..
-    ......................`
-    
-    const toArray = (st) => {
-      return st.trim().split('\n').map(row => [...row.trim()])
-    }
-
-    // const simpleLevel = new Level(toArray(simpleLevelPlan));
-    // console.log(simpleLevel);
-    // const display = new DOMDisplay(document.body ,simpleLevel)
-    runGame([toArray(simpleLevelPlan)], DOMDisplay)
-  </script>
+  <script src="./dist//monitor.js"></script>
 </body>
 
 </html>

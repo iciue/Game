@@ -21,8 +21,13 @@ class DOMDisplay {
     this.dom = elt('div', {
       class: 'game'
     }, drawGrid(level))
+
     this.actorsLayer = null
     parent.appendChild(this.dom)
+
+    this.width = this.dom.clientWidth
+    this.height  = this.dom.clientHeight
+    this.margin = this.width / 3
   }
 
   clear() {
@@ -51,24 +56,28 @@ DOMDisplay.prototype.scrollPlayerIntoView = function(state) {
   const height  = this.dom.clientHeight
   const margin = width / 3 // 玩家在视口边缘 1/3 的位置时需要转动视角
 
-  const left = this.dom.left
+  const left = this.dom.scrollLeft
   const right = left + width 
   const top = this.dom.scrollTop
   const bottom = top + height
 
   const player = state.player
   const center = player.pos.plus(player.size.times(0.5)).times(scale) // 玩家中心的坐标
-
-  if (center.x < left + margin) {
+  if (center.x < left + margin) {  
+    // console.log(`左滚`);
     this.dom.scrollLeft = center.x - margin
-  }else if (center.x > right - margin) {
+    
+  }else if (center.x > right - margin) { 
+    // console.log(`右滚`);
     this.dom.scrollLeft = center.x + margin - width
   }
 
   if (center.y < top + margin) {
-    this.dom.scrollLeft = center.x - margin
-  } else if (center.y > bottom.y + margin - height) {
-    this.dom.scrollTop = center.y - margin - height
+    // console.log(`上滚`);
+    this.dom.scrollTop = center.y - margin
+  } else if (center.y > bottom - margin) {
+    // console.log(`下滚`);
+    this.dom.scrollTop = center.y - margin
   }
 
 }
@@ -108,3 +117,4 @@ const drawActors = (actors) => {
 }
 
 
+export default DOMDisplay
