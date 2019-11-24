@@ -38,10 +38,13 @@ class CanvasDisplay {
 
 }
 
+/**
+ * 以最新的数据绘制游戏
+ */
 CanvasDisplay.prototype.syncState = function (state) {
   this.updateViewPort(state)
   this.clearDisplay(state.status)
-  this.drawBackground(state.level)
+  this.drawBackground(state.level, state.life)
   this.drawActors(state.actors)
 }
 
@@ -89,7 +92,7 @@ CanvasDisplay.prototype.clearDisplay = function (status) {
 
 const img = document.createElement('img')
 img.src = 'src/imgs/sprites.png'
-CanvasDisplay.prototype.drawBackground = function (level) {
+CanvasDisplay.prototype.drawBackground = function (level, life) {
   const { left, top, width, height } = this.viewPortInfo
 
   const xStart = Math.floor(left)
@@ -110,6 +113,10 @@ CanvasDisplay.prototype.drawBackground = function (level) {
         screenX, screenY, scale, scale)
     }
   }
+
+  this.ctx.font = `22px serif`
+  this.ctx.fillStyle = 'red'
+  this.ctx.fillText(`life: ${life}`, 10, 20, 500)
 }
 
 

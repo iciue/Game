@@ -1,3 +1,4 @@
+import State from '../State'
 import {Vector} from '../utils'
 
 /**
@@ -33,7 +34,7 @@ Coin.prototype.collide = function (state) {
   const filteredActor = state.actors.filter(a => a !== this) //剔除得到的硬币
   let status = state.status
   if (!filteredActor.some(a => a.type == 'coin')) status = 'won'
-  return new State(state.level, filteredActor, status)
+  return new State(state.level, filteredActor, status, state.life)
 }
 
 const wobbleSpeed = 8

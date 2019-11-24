@@ -1,3 +1,4 @@
+import State from '../State'
 import {Vector} from '../utils'
 /**
  * 有 3 种不同类型的熔岩
@@ -24,7 +25,7 @@ class Lava {
 }
 Lava.prototype.size = new Vector(1, 1)
 Lava.prototype.collide = function (state) {
-  return new State(state.level, state.actors, "lost");
+  return new State(state.level, state.actors, "lost", state.life);
 }
 
 /**

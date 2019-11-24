@@ -17,6 +17,16 @@ class Vector {
 }
 
 /**
+ * 计算 a1 a2 是否重叠
+ */
+const overlap = (a1, a2) => {
+  return a1.pos.x + a1.size.x > a2.pos.x &&  // a1 底部 是否与 a2 重叠
+    a1.pos.x < a2.pos.x + a2.size.x &&       // a1 顶部 是否与 a2 重叠
+    a1.pos.y + a1.size.y > a2.pos.y &&       // a1 右侧 是否与 a2 重叠
+    a1.pos.y < a2.pos.y + a2.size.y         // a2 左侧 是否与 a2 重叠
+};
+
+/**
  * 生成事件对象, 并绑定事件
  */
 const trackKeys = (keys) => {
@@ -200,10 +210,13 @@ class CanvasDisplay {
 
 }
 
+/**
+ * 以最新的数据绘制游戏
+ */
 CanvasDisplay.prototype.syncState = function (state) {
   this.updateViewPort(state);
   this.clearDisplay(state.status);
-  this.drawBackground(state.level);
+  this.drawBackground(state.level, state.life);
   this.drawActors(state.actors);
 };
 
@@ -251,7 +264,7 @@ CanvasDisplay.prototype.clearDisplay = function (status) {
 
 const img = document.createElement('img');
 img.src = 'src/imgs/sprites.png';
-CanvasDisplay.prototype.drawBackground = function (level) {
+CanvasDisplay.prototype.drawBackground = function (level, life) {
   const { left, top, width, height } = this.viewPortInfo;
 
   const xStart = Math.floor(left);
@@ -272,6 +285,10 @@ CanvasDisplay.prototype.drawBackground = function (level) {
         screenX, screenY, scale$1, scale$1);
     }
   }
+
+  this.ctx.font = `22px serif`;
+  this.ctx.fillStyle = 'red';
+  this.ctx.fillText(`life: ${life}`, 10, 20, 500);
 };
 
 
@@ -339,6 +356,44 @@ CanvasDisplay.prototype.drawPlayer = function (player, x, y, width, height) {
 };
 
 /**
+ * 游戏的状态, 用于判断游戏的输赢
+ */
+class State {
+  constructor(level, actors, status, life) {
+    this.level = level;
+    this.actors = actors;
+    this.status = status;
+    this.life = life;
+  }
+
+  static start(level ,life) {
+    return new State(level, level.actors, 'playing', life)
+  }
+
+  get player() {
+    return this.actors.find(a => a.type === 'player')
+  }
+}
+/**
+ * 更新活动元素的数据
+ * @param {*} time
+ * @param {*} keys
+ */
+State.prototype.update = function (time, keys) {
+  const actors = this.actors.map(actor => actor.update(time, this, keys));  //更新活动元素位置
+  let newState = new State(this.level, actors, this.status, this.life); // 根据新活动元素的位置生成 State
+  if (newState.status !== 'playing') return newState
+  const player = newState.player;
+  if (this.level.touches(player.pos, player.size, 'lava')) return new State(this.level, actors, 'lost', this.life)
+  for (let actor of actors) {
+    if (actor.type !== 'player' && overlap(actor, player)) {
+      newState = actor.collide(newState);
+    }
+  }
+  return newState
+};
+
+/**
  * 硬币, 硬币可以在垂直方向上小幅度的抖动
  * wobble 属性用来记录硬币的抖动幅度
  * wobble 和 basePos 共同决定了 pos 所在的实际位置
@@ -371,7 +426,7 @@ Coin.prototype.collide = function (state) {
   const filteredActor = state.actors.filter(a => a !== this); //剔除得到的硬币
   let status = state.status;
   if (!filteredActor.some(a => a.type == 'coin')) status = 'won';
-  return new State(state.level, filteredActor, status)
+  return new State(state.level, filteredActor, status, state.life)
 };
 
 const wobbleSpeed = 8;
@@ -407,7 +462,7 @@ class Lava {
 }
 Lava.prototype.size = new Vector(1, 1);
 Lava.prototype.collide = function (state) {
-  return new State(state.level, state.actors, "lost");
+  return new State(state.level, state.actors, "lost", state.life);
 };
 
 /**
@@ -535,43 +590,6 @@ Level.prototype.touches = function (pos, size, targetType) {
     }
   }
   return false
-};
-
-/**
- * 游戏的状态, 用于判断游戏的输赢
- */
-class State$1 {
-  constructor(level, actors, status) {
-    this.level = level;
-    this.actors = actors;
-    this.status = status;
-  }
-
-  static start(level) {
-    return new State$1(level, level.actors, 'playing')
-  }
-
-  get player() {
-    return this.actors.find(a => a.type === 'player')
-  }
-}
-/**
- * 
- * @param {*} time
- * @param {*} keys
- */
-State$1.prototype.update = function (time, keys) {
-  const actors = this.actors.map(actor => actor.update(time, this, keys));  //更新活动元素位置
-  let newState = new State$1(this.level, actors, this.status); // 根据新活动元素的位置生成 State
-  if (newState.status !== 'playing') return newState
-  const player = newState.player;
-  if (this.level.touches(player.pos, player.size, 'lava')) return new State$1(this.level, actors, 'lost')
-  for (let actor of actors) {
-    if (actor.type !== 'player' && overlap(actor, player)) {
-      newState = actor.collide(newState);
-    }
-  }
-  return newState
 };
 
 const GAME_PLAN = [`                                                    
@@ -773,10 +791,10 @@ const runAnimation = (frameFunc) => {
 };
 
 
-const runLevel = (level, Display) => {
-  const display = new Display(document.body, level);
-  let state = State$1.start(level);
-  let ending = 1;
+const runLevel = (level, Display, life) => {
+  const display = new Display(document.querySelector('.game-box'), level);
+  let state = State.start(level, life);
+  let ending = .5;  // 当游戏结束时, 留给玩家 0.5 秒的反应时间
   return new Promise((resolve, reject) => {
     runAnimation(time => {
       state = state.update(time, arrowKeys);
@@ -784,7 +802,6 @@ const runLevel = (level, Display) => {
       if (state.status === 'playing') {
         return true
       } else if (ending > 0) {
-        console.log(ending);
         ending -= time;
       } else {
         display.clear();
@@ -796,11 +813,17 @@ const runLevel = (level, Display) => {
 };
 
 async function runGame(plans, Display) {
-  for (let level = 0; level < plans.length;) {
-    let status = await runLevel(new Level(plans[1]), Display);
-    if (status === 'won') level++;
+  let life = 3;
+  for (let level = 0; life > 0 && level < plans.length;) {
+    let status = await runLevel(new Level(plans[level]), Display, life);
+    if (status === 'won') {
+      level++;
+    } else {
+      life--;
+    }
   }
-  console.log('you won');
+  const finallyStatus = life > 0 ? 'win' : 'lose';
+  console.log(finallyStatus);
 }
 
 

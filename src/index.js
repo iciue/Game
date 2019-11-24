@@ -1,4 +1,6 @@
-import {trackKeys} from './utils'
+import {
+  trackKeys
+} from './utils'
 import DOMDisplay from './DOMdisplay'
 import CanvasDisplay from './CanvasDisplay'
 import Level from './level'
@@ -30,10 +32,10 @@ const runAnimation = (frameFunc) => {
 }
 
 
-const runLevel = (level, Display) => {
-  const display = new Display(document.body, level)
-  let state = State.start(level)
-  let ending = 1
+const runLevel = (level, Display, life) => {
+  const display = new Display(document.querySelector('.game-box'), level)
+  let state = State.start(level, life)
+  let ending = .5  // 当游戏结束时, 留给玩家 0.5 秒的反应时间
   return new Promise((resolve, reject) => {
     runAnimation(time => {
       state = state.update(time, arrowKeys)
@@ -41,7 +43,6 @@ const runLevel = (level, Display) => {
       if (state.status === 'playing') {
         return true
       } else if (ending > 0) {
-        console.log(ending);
         ending -= time
       } else {
         display.clear()
@@ -53,11 +54,17 @@ const runLevel = (level, Display) => {
 }
 
 async function runGame(plans, Display) {
-  for (let level = 0; level < plans.length;) {
-    let status = await runLevel(new Level(plans[1]), Display)
-    if (status === 'won') level++
+  let life = 3
+  for (let level = 0; life > 0 && level < plans.length;) {
+    let status = await runLevel(new Level(plans[level]), Display, life)
+    if (status === 'won') {
+      level++
+    } else {
+      life--
+    }
   }
-  console.log('you won');
+  const finallyStatus = life > 0 ? 'win' : 'lose'
+  console.log(finallyStatus);
 }
 
 

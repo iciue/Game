@@ -43,3 +43,9 @@
   max-height: 450px;
   position: relative;
 }
+
+
+.game-box {
+  margin: 0 auto;
+  max-width: 650px;
+}
