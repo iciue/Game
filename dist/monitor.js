@@ -30,12 +30,17 @@ const overlap = (a1, a2) => {
  * 生成事件对象, 并绑定事件
  */
 const trackKeys = (keys) => {
-  const down = Object.create(null);
+  if(!keys) return {}
 
+  const down = Object.create(null);
   const track = (e) => {
+    console.log('outer',e);
+    console.log(keys.includes(e.key), );
     if (keys.includes(e.key)) {
       e.preventDefault();
-      down[e.key] = e.type === 'keydown';
+      console.log('inner',e.key, e.type);
+      down[e.key] = (e.type === 'keydown');
+      console.log(down);
     }
   };
 
@@ -52,6 +57,15 @@ const flipHorizontally = (context, around) => {
   context.translate(around, 0);
   context.scale(-1, 1);
   context.translate(-around, 0);
+};
+
+
+const addEventListenerOnce = (target, eventType, callback) => {
+  function handler(e) {
+    callback(e);
+    target.removeEventListener(eventType, handler);
+  }
+  target.addEventListener(eventType, handler);
 };
 
 /**
@@ -505,6 +519,7 @@ const PlayerXSpeed = 7;
 const gravity = 30;
 const jumpSpeed = 17;
 Player.prototype.update = function (time, state, keys) {
+
   let xSpeed = 0;
 
   if (keys.ArrowLeft) xSpeed -= PlayerXSpeed;
@@ -766,10 +781,19 @@ const GAME_PLAN = [`
 ..............................................................................................................
 `];
 
-const arrowKeys = trackKeys(["ArrowLeft", "ArrowRight", "ArrowUp"]);
+const PLANS = GAME_PLAN.map(st => st.trim().split('\n').map(row => [...row.trim()]));  //格式化游戏地图
+
+const keydown = new Event('keydown');
+keydown.key = 'ArrowUp';
+
+const keyUp = new Event('keyup');
+keyUp.key = 'ArrowUp';
+
+let arrowKeys = trackKeys(); // 事件对象
+let isPause = false;
+
 /**
- * 
- *
+ * 利用 rAF 绘制动画
  * @param {*} frameFunc
  */
 const runAnimation = (frameFunc) => {
@@ -778,6 +802,7 @@ const runAnimation = (frameFunc) => {
   const frame = (time) => {
     if (lastTime != null) {
       let timeStep = Math.min(time - lastTime, 100) / 1000;
+
       if (frameFunc(timeStep) === false) {
         console.log('游戏结束');
         return;
@@ -790,46 +815,70 @@ const runAnimation = (frameFunc) => {
   requestAnimationFrame(frame);
 };
 
-
 const runLevel = (level, Display, life) => {
   const display = new Display(document.querySelector('.game-box'), level);
   let state = State.start(level, life);
-  let ending = .5;  // 当游戏结束时, 留给玩家 0.5 秒的反应时间
+  let endingWaiting = .5; // 当游戏结束时, 留给玩家 0.5 秒的反应时间
   return new Promise((resolve, reject) => {
     runAnimation(time => {
+      if (isPause) return;
       state = state.update(time, arrowKeys);
       display.syncState(state);
       if (state.status === 'playing') {
         return true
-      } else if (ending > 0) {
-        ending -= time;
+      } else if (endingWaiting > 0) {
+        endingWaiting -= time;
       } else {
         display.clear();
         resolve(state.status);
         return false
       }
-    });
+    }, );
   })
 };
 
-async function runGame(plans, Display) {
+async function runGame(PLANS, Display) {
   let life = 3;
-  for (let level = 0; life > 0 && level < plans.length;) {
-    let status = await runLevel(new Level(plans[level]), Display, life);
+
+  for (let level = 1; life > 0 && level < PLANS.length;) {
+    let status = await runLevel(new Level(PLANS[level]), Display, life);
     if (status === 'won') {
       level++;
     } else {
       life--;
     }
   }
-  const finallyStatus = life > 0 ? 'win' : 'lose';
-  console.log(finallyStatus);
+  initialGameDisplay();
 }
 
+const startGameBtn = document.querySelector('.start');
+const pauseGameBtn = document.querySelector('.pause');
 
-const toArray = (st) => {
-  return st.trim().split('\n').map(row => [...row.trim()])
+
+/**
+ *
+ *
+ */
+const initialGameDisplay = () => {
+  let alreadyStart = false;
+
+  runGame(PLANS, CanvasDisplay);
+
+  addEventListenerOnce(startGameBtn, 'click', (e) => {
+    if (alreadyStart) return;
+    alreadyStart = true;
+    arrowKeys = trackKeys(["ArrowLeft", "ArrowRight", "ArrowUp"]);
+    window.dispatchEvent(keydown);
+    setTimeout(() => {
+      window.dispatchEvent(keyUp);
+    }, 0);
+
+    pauseGameBtn.addEventListener('click', (e) => {
+      e.target.textContent = isPause ? '暂停游戏' : '继续游戏';
+      isPause = !isPause;
+    });
+  });
+
 };
-const plans = GAME_PLAN.map(st => toArray(st));
-// runGame(plans, DOMDisplay)
-runGame(plans, CanvasDisplay);
+
+initialGameDisplay();

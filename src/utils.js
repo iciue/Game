@@ -28,12 +28,17 @@ export const overlap = (a1, a2) => {
  * 生成事件对象, 并绑定事件
  */
 export const trackKeys = (keys) => {
-  const down = Object.create(null)
+  if(!keys) return {}
 
+  const down = Object.create(null)
   const track = (e) => {
+    console.log('outer',e);
+    console.log(keys.includes(e.key), );
     if (keys.includes(e.key)) {
       e.preventDefault()
-      down[e.key] = e.type === 'keydown'
+      console.log('inner',e.key, e.type);
+      down[e.key] = (e.type === 'keydown')
+      console.log(down);
     }
   }
 
@@ -50,4 +55,13 @@ export const flipHorizontally = (context, around) => {
   context.translate(around, 0);
   context.scale(-1, 1);
   context.translate(-around, 0);
+}
+
+
+export const addEventListenerOnce = (target, eventType, callback) => {
+  function handler(e) {
+    callback(e)
+    target.removeEventListener(eventType, handler)
+  }
+  target.addEventListener(eventType, handler)
 }

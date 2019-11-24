@@ -27,6 +27,7 @@ const PlayerXSpeed = 7
 const gravity = 30
 const jumpSpeed = 17
 Player.prototype.update = function (time, state, keys) {
+
   let xSpeed = 0
 
   if (keys.ArrowLeft) xSpeed -= PlayerXSpeed
